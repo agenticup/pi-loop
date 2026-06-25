@@ -4,4 +4,4 @@ dist/
 .DS_Store
 .env
 .pi/
-docs/images/
+docs/images/*.jpg
