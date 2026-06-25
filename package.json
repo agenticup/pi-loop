@@ -46,6 +46,9 @@
   },
   "author": "Abhijit Kalta",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=22"
   },
