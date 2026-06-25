@@ -135,7 +135,4 @@ or need exactly one refinement.
 
 ## Related
 
-- [Loop engineering: the production agent loop nobody talks about](https://agenticup.dev/posts/loop-engineering-production-agent-loops/) — the article this tool implements
-- [pi-dynamic-workflows](https://pi.dev/packages/pi-dynamic-workflows) — general-purpose multi-agent scripting. pi-loop is a fixed pipeline, no scripting needed.
-- [pi-subagents](https://pi.dev/packages/@tintinweb/pi-subagents) — general sub-agent spawning with queue management. pi-loop uses sub-agents as an implementation detail.
-- [Research papers implemented](docs/research-decomposition.md) — ADaPT, MAKER, DRIP, DRAGON, ACONIC, Self-Refine, SGH, AgentDiet applied to pi-loop.
+- [Loop engineering: the production agent loop nobody talks about](https://agenticup.dev/posts/loop-engineering-production-agent-loops/) — the article this tool implements.
