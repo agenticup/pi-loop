@@ -41,7 +41,8 @@
     ]
   },
   "repository": {
-    "type": "git"
+    "type": "git",
+    "url": "git+https://github.com/agenticup/pi-loop.git"
   },
   "author": "Abhijit Kalta",
   "license": "MIT",
