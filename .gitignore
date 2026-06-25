@@ -5,3 +5,4 @@ dist/
 .env
 .pi/
 docs/
+blog-post.md
