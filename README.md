@@ -6,6 +6,8 @@
 [![Read the article](https://img.shields.io/badge/Read-Loop%20Engineering-3cffd0)](https://agenticup.dev/posts/loop-engineering-production-agent-loops/)
 [![Blog post](https://img.shields.io/badge/Blog-Building%20pi--loop-3cffd0)](https://agenticup.dev/posts/pi-loop-dot-ai/)
 
+<img src="pi-loop-diagram.svg" alt="pi-loop 5-stage diagram" width="600"/>
+
 pi-loop makes Pi think deeper about complex tasks.
 
 Implements a research-backed recursive loop with:
