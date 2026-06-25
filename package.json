@@ -1,0 +1,63 @@
+{
+  "name": "pi-loop",
+  "version": "0.1.0",
+  "description": "Recursive decompose-solve-critique-iterate-synthesize loop for Pi — the loop engineering pattern as an extension.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/",
+    "extensions/",
+    "src/",
+    "docs/",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "pi",
+    "loop",
+    "rlm",
+    "recursive",
+    "agents",
+    "reflexion",
+    "multi-agent",
+    "agent-loop"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/loop.ts"
+    ]
+  },
+  "repository": {
+    "type": "git"
+  },
+  "author": "Abhijit Kalta",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "^0.78.0",
+    "typebox": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "0.80.2",
+    "@earendil-works/pi-tui": "0.78.0",
+    "typebox": "latest",
+    "typescript": "latest",
+    "tsx": "latest"
+  }
+}
