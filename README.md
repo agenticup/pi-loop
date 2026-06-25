@@ -1,6 +1,6 @@
 # pi-loop
 
-[![npm version](https://img.shields.io/npm/v/pi-loop?color=3cffd0&label=pi-loop)](https://npmjs.com/package/pi-loop)
+[![npm version](https://img.shields.io/npm/v/@agenticup/pi-loop?color=3cffd0&label=@agenticup/pi-loop)](https://npmjs.com/package/@agenticup/pi-loop)
 [![License: MIT](https://img.shields.io/badge/license-MIT-3cffd0)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3cffd0?logo=typescript)](https://www.typescriptlang.org/)
 [![Read the article](https://img.shields.io/badge/Read-Loop%20Engineering-3cffd0)](https://agenticup.dev/posts/loop-engineering-production-agent-loops/)
