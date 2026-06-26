@@ -15,7 +15,6 @@
     "dist/",
     "extensions/",
     "src/",
-    "docs/",
     "README.md"
   ],
   "scripts": {
