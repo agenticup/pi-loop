@@ -1,6 +1,6 @@
 {
   "name": "@agenticup/pi-loop",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Recursive decompose-solve-critique-iterate-synthesize loop for Pi — the loop engineering pattern as an extension.",
   "type": "module",
   "main": "./dist/index.js",
