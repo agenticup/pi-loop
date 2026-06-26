@@ -34,7 +34,7 @@ export async function executeLoopTool(
 
 	const result = await runLoop(params.prompt, {
 		cwd: ctx.cwd,
-		maxDepth: params.maxDepth ?? 1,
+		maxDepth: params.maxDepth ?? 2,
 		concurrency: params.concurrency ?? 4,
 		model: params.model,
 		signal,
@@ -42,9 +42,6 @@ export async function executeLoopTool(
 		agentTimeoutMs: 1_200_000,
 		onUpdate: (text) => {
 			onUpdate?.(textResult(text));
-		},
-		onStreamDelta: (id, text) => {
-			onUpdate?.(textResult(`[${id}] ${text}`));
 		},
 	});
 

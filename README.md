@@ -57,7 +57,7 @@ Pi calls the `loop` tool, runs the 5-stage pipeline, and returns a synthesized a
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `prompt` | string | required | The task to recursively decompose and solve |
-| `maxDepth` | number | 1 | Recursion depth (1-3). Each level further decomposes sub-problems. ~2x cost per level. |
+| `maxDepth` | number | 2 | Recursion depth (1-3). Each level further decomposes sub-problems. ~2x cost per level. |
 | `concurrency` | number | 4 | Parallel sub-agents (1-8). Higher = faster, more API calls in-flight. |
 | `model` | string | session | Override the sub-agent model (e.g. `claude-sonnet-4`) |
 
@@ -84,9 +84,8 @@ Phase 1/5: Decomposing task into 12 sub-problems...
   → migration: Migrating from old rate limiter
 Phase 1 done: Task broken into 12 sub-problems — token-bucket, redis-backend, ...
 
-Phase 1.5/5: Backward-checking for missing preconditions...
+Phase 1.5/5: Checking for critical missing preconditions...
   DRIP found 1 missing precondition(s) — added to sub-problems
-  → tier-definition: Define free vs paid tier boundaries
 
 Phase 2/5: Solving 13 sub-problems...
   ✓ token-bucket — Token bucket with refill rate 10/s per key... (1/13)
@@ -94,18 +93,18 @@ Phase 2/5: Solving 13 sub-problems...
 Phase 2 done: All 13 sub-problems solved
 
 Phase 3/5: Critiquing 13 solutions...
-  ✓ token-bucket — ✓ PASS (1/13)
-  ✗ free-tier-limits — ✗ ITERATE: No burst allowance for free tier... (4/13)
-  ✗ distributed — ✗ PASS (2/3 critics voted PASS) (9/13)
+  token-bucket — ✓ PASS (1/13)
+  free-tier-limits — ✗ ITERATE: No burst allowance for free tier... (4/13)
+  distributed — ✓ PASS (9/13)
 Phase 3 done: 11 passed, 2 flagged for iteration — free-tier-limits, alerting
 
-Phase 4/5: Checking 13 sub-problems for refinement...
+Phase 4/5: 2 of 13 sub-problems flagged for refinement...
   ⟳ free-tier-limits: decomposing deeper (depth 1 → 2)...
   ⟳ free-tier-limits: recomposed from 3 deeper parts (v1)
-Phase 4 done: 2 sub-problems refined — free-tier-limits (1x), alerting (1x)
+  ✓ free-tier-limits re-critique: PASS (v1)
+Phase 4 done: 1 sub-problem refined — free-tier-limits (1x)
 
 Phase 5/5: Synthesizing final answer...
-  (conflict check: free tier "no bursts" vs paid tier "unlimited bursts" — resolved)
 ```
 
 Everything stays visible — truncated to 40 lines if the run is very long.

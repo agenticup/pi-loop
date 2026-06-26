@@ -212,8 +212,8 @@ async function subAgent(
 	}
 }
 
-/** Extract JSON from model response — handles code fences and nested braces. */
-function extractJson(text: string): Record<string, unknown> {
+/** @internal - exported for testing. Extracts JSON from model response — handles code fences and nested braces. */
+export function extractJson(text: string): Record<string, unknown> {
 	// Strip markdown code fences
 	const clean = text.replace(/```(?:json)?\s*/g, "").trim();
 
@@ -266,22 +266,18 @@ Do not include any other text, markdown, or explanation. Only the JSON object.`;
 
 	const text = await subAgent(fullPrompt, options);
 	try {
-		const parsed = extractJson(text);
-		return parsed.subProblems ? parsed : { subProblems: [] };
+		return extractJson(text);
 	} catch (e) {
 		console.error(
 			`[loop-engine] extractJson failed for label="${options.label}":`,
 			e instanceof Error ? e.message : String(e),
 		);
-		return { subProblems: [] };
+		return {};
 	}
 }
 
-/**
- * Semaphore: limits concurrent execution of async functions.
- * When `active >= limit`, new calls queue and auto-start when a slot opens.
- */
-function createLimiter(limit: number) {
+/** @internal - exported for testing. Semaphore: limits concurrent execution of async functions. */
+export function createLimiter(limit: number) {
 	let active = 0;
 	const queue: Array<() => void> = [];
 	const next = () => {
@@ -301,24 +297,20 @@ function createLimiter(limit: number) {
 	};
 }
 
-/**
- * Run an async function over each item, with semaphore-based concurrency control.
- * Starts tasks as slots open — more responsive than batched execution.
- * Returns results in input order. Failed items call `fallback()` for their own value.
- */
-async function runConcurrent<T, R>(
+/** @internal - exported for testing. Runs an async function over each item, with semaphore-based concurrency control. */
+export async function runConcurrent<T, R>(
 	items: T[],
 	concurrency: number,
 	fn: (item: T, index: number) => Promise<R>,
-	fallback: () => R,
+	fallback: (item: T, index: number) => R,
 ): Promise<R[]> {
 	const limiter = createLimiter(concurrency);
 	const results = await Promise.allSettled(
 		items.map((item, i) => limiter(() => fn(item, i))),
 	);
-	return results.map((r) => {
+	return results.map((r, i) => {
 		if (r.status === "fulfilled") return r.value;
-		return fallback();
+		return fallback(items[i], i);
 	});
 }
 
@@ -357,16 +349,17 @@ export async function runLoop(
 	// === PHASE 1: DECOMPOSE ===
 	appendLog("Phase 1/5: Decomposing task into sub-problems...");
 	const decomposePrompt = [
-		`Decompose this task into many tiny, focused sub-problems. Each sub-problem should cover ONE specific concern.`,
+		`Decompose this task into many tiny, focused sub-problems. Each sub-problem must specify BOTH the concern AND the concrete output format expected.`,
 		``,
 		`Task: ${prompt}`,
 		``,
 		[
 			`Rules:`,
-			`- Each sub-problem must cover exactly ONE concern — no combining multiple topics`,
+			`- Each sub-problem describes ONE concrete output: a data model, a list of API endpoints, a component hierarchy, a decision table, or a specific code block.`,
 			`- Each must be independently solvable (no cross-dependencies)`,
-			`- For design/architecture: solvable in 2-3 sentences`,
-			`- For review/analysis: covers ONE file or ONE concern area`,
+			`- The description MUST say what OUTPUT to produce, not just the area to explore`,
+			`  GOOD: "Design the User table schema with fields, types, and constraints"`,
+			`  BAD:  "Handle user data storage"`,
 			`- No overlapping features between sub-problems`,
 			`- Aim for 8-15 sub-problems — finer granularity means fewer mistakes`,
 			`- Flat decomposition at this level — no nested sub-problems`,
@@ -511,14 +504,14 @@ Only flag preconditions that meet ALL of:
 	const total = subProblems.length;
 	let solvedCount = 0;
 	appendLog(`Phase 2/5: Solving ${total} sub-problems...`);
-	const solveFallback = (): SubProblem => ({
-		id: "failed",
-		description: "Sub-agent failed to produce a solution",
+	const solveFallback = (problem: SubProblem): SubProblem => ({
+		id: problem.id,
+		description: problem.description,
 		solution: "[Solution unavailable — sub-agent error]",
 		critique: undefined,
 		needsIteration: false,
 		iterationCount: 0,
-		depth: 1,
+		depth: problem.depth,
 	});
 
 	const solved = await runConcurrent(
@@ -526,7 +519,20 @@ Only flag preconditions that meet ALL of:
 		concurrency,
 		async (problem) => {
 			const solution = await subAgent(
-				`Solve this problem thoroughly. Be specific and complete.
+				`Produce the concrete output specified below. Follow these rules strictly:
+
+RULES:
+1. Output ONLY the solution — no introduction, no explanation, no "I'll start by", no "Let me", no "First", no "I will", no meta-commentary.
+2. If the problem asks for a data model / schema / migration: output the SQL DDL with fields, types, constraints, and indexes.
+3. If it asks for API endpoints / routes: output method, path, request body, response format, auth requirements.
+4. If it asks for a UI component / page / screen: output the component hierarchy, props interface, state management, and key behavior.
+5. If it asks for architecture / system design / component interaction: output a component or service diagram (text-based), data flow, and responsibility of each part.
+6. If it asks for code / implementation / function: output the implementation directly with type signatures and key logic. Use code blocks with language annotations.
+7. If it asks for review / audit / bug finding: output a table with file/location, issue description, severity, and suggested fix.
+8. If it asks for comparison / tradeoff / best practice: output a comparison table with columns for approach, pros, cons, and recommendation.
+9. If it asks for config / deployment / infrastructure: output the configuration files, environment variables, and deployment steps.
+
+Forbidden: any sentence that describes what you are going to do instead of doing it.
 
 Problem: ${problem.description}`,
 				{
@@ -571,14 +577,14 @@ Problem: ${problem.description}`,
 	const critiqueTotal = subProblems.length;
 	let critiqueCount = 0;
 	appendLog(`Phase 3/5: Critiquing ${critiqueTotal} solutions...`);
-	const critiqueFallback = (): SubProblem => ({
-		id: "failed",
-		description: "Critique failed",
-		solution: undefined,
+	const critiqueFallback = (problem: SubProblem): SubProblem => ({
+		id: problem.id,
+		description: problem.description,
+		solution: problem.solution,
 		critique: "[Critique unavailable — sub-agent error]",
 		needsIteration: false,
-		iterationCount: 0,
-		depth: 1,
+		iterationCount: problem.iterationCount,
+		depth: problem.depth,
 	});
 
 	const critiqued = await runConcurrent(
@@ -693,7 +699,11 @@ Be strict. If anything is missing or wrong, flag it.`;
 				majorityVerdict === "ITERATE" ? "✗ ITERATE" : "✓ PASS";
 			const feedback =
 				majorityVerdict === "ITERATE"
-					? chosenCritique.replace(/^ITERATE:\s*/i, "").slice(0, 80) || ""
+					? chosenCritique
+							.replace(/^ITERATE:\s*/i, "")
+							.replace(/\n/g, " ")
+							.trim()
+							.slice(0, 80) || ""
 					: "";
 			const status = feedback ? `${verdictIcon}: ${feedback}...` : verdictIcon;
 			appendLog(
@@ -725,8 +735,9 @@ Be strict. If anything is missing or wrong, flag it.`;
 	appendLog("");
 
 	// === PHASE 4: ITERATE / ADaPT deeper decompose on flagged problems ===
+	const flaggedCount = subProblems.filter((p) => p.needsIteration).length;
 	appendLog(
-		`Phase 4/5: Checking ${subProblems.length} sub-problems for refinement...`,
+		`Phase 4/5: ${flaggedCount} of ${subProblems.length} sub-problems flagged for refinement...`,
 	);
 	const MAX_ITERATIONS = 2;
 
@@ -752,7 +763,7 @@ Be strict. If anything is missing or wrong, flag it.`;
 					``,
 					`Current solution: ${current.solution ? current.solution.slice(0, 200) : "none"}`,
 					``,
-					`Each part must cover ONE specific concern. Aim for 3-5 smaller parts.`,
+					`Each part must cover ONE specific concern and specify what OUTPUT to produce (data model, API endpoint, code block, decision table, etc.). Aim for 3-5 smaller parts.`,
 				].join("\n");
 
 				const subParsed = await subAgentStructured(
@@ -780,7 +791,9 @@ Be strict. If anything is missing or wrong, flag it.`;
 						concurrency,
 						async (sub) => {
 							const subSolution = await subAgent(
-								`Solve this sub-problem as part of: ${current.description}\n\nSub-problem: ${sub.description}`,
+								`Produce the concrete output for this sub-problem. Output ONLY the solution — no introduction, no explanation, no "I'll start by", no "Let me". Use code blocks with language annotations where applicable.
+
+Sub-problem: ${sub.description}`,
 								{
 									cwd: options.cwd,
 									label: `${current.id}-${sub.id}`,
@@ -900,6 +913,18 @@ Be strict. If anything is missing or wrong, flag it.`;
 				critique: reCritique,
 				needsIteration: reCritique.trim().startsWith("ITERATE"),
 			};
+
+			const recritiqueVerdict = current.needsIteration ? "✗ ITERATE" : "✓ PASS";
+			const recritiqueSnippet = current.needsIteration
+				? (current.critique ?? "")
+						.replace(/^ITERATE:\s*/i, "")
+						.replace(/\n/g, " ")
+						.trim()
+						.slice(0, 80)
+				: "";
+			appendLog(
+				`  ${current.id} re-critique: ${recritiqueVerdict}${recritiqueSnippet ? ` \u2014 ${recritiqueSnippet}...` : ""} (v${current.iterationCount})`,
+			);
 		}
 		refinedProblems.push(current);
 	}
@@ -1018,4 +1043,3 @@ Be strict. If anything is missing or wrong, flag it.`;
 		iterations: totalIterations,
 	};
 }
-

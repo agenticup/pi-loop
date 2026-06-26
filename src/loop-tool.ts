@@ -12,10 +12,10 @@ const loopToolSchema = Type.Object({
 	maxDepth: Type.Optional(
 		Type.Integer({
 			description:
-				"Max recursion depth (1-3). Default 1. Each level decomposes sub-problems further. ~2x cost per level.",
+				"Max recursion depth (1-3). Default 2. Each level decomposes sub-problems further. ~2x cost per level.",
 			minimum: 1,
 			maximum: 3,
-			default: 1,
+			default: 2,
 		}),
 	),
 	concurrency: Type.Optional(
@@ -55,7 +55,7 @@ export function createLoopTool(): ToolDefinition {
 			"Do NOT use loop for simple lookup, single-file edits, or tasks where a single agent response suffices.",
 			"When the user explicitly says 'Use loop' or 'Run a loop', invoke the loop tool regardless of task complexity. The user is testing or deliberately using the tool.",
 			"The loop tool runs a fixed pipeline: decompose into sub-problems → solve each (sub-agents) → critique each → iterate on failures → synthesize into final answer.",
-			"maxDepth controls recursion. Depth 1 = one level of decomposition. Depth 2 = sub-problems themselves get decomposed. Default is 1.",
+			"maxDepth controls recursion. Depth 1 = one level of decomposition. Depth 2 = sub-problems themselves get decomposed. Default is 2.",
 			"concurrency controls how many sub-agents run in parallel during solve and critique (1-8, default 4). Higher values reduce wall-clock time but increase API concurrency.",
 			"The tool enforces the gain-cost sweet spot: critique gates iteration, and the loop terminates when all sub-problems pass or maxDepth is reached.",
 		],
