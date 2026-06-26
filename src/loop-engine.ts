@@ -1019,4 +1019,3 @@ Be strict. If anything is missing or wrong, flag it.`;
 	};
 }
 
-// ponytail: cleanup is automatic — _loopServices is overwritten on the next runLoop() call

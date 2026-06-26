@@ -33,7 +33,7 @@ Implements a research-backed recursive loop with:
 ## Install
 
 ```bash
-pi install npm:pi-loop
+pi install npm:@agenticup/pi-loop
 ```
 
 Then reload Pi:
